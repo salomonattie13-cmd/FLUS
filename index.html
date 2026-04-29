@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLUS — AI Debate</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030810;--border:rgba(0,200,255,0.15);--glow:#00c8ff;--grid:rgba(0,200,255,0.04);--gemini:#4285F4;--gemini-glow:rgba(66,133,244,0.3);--claude:#D4A574;--claude-glow:rgba(212,165,116,0.3);--chatgpt:#10A37F;--chatgpt-glow:rgba(16,163,127,0.3);--grok:#FF4500;--grok-glow:rgba(255,69,0,0.3);--manus:#BF5FFF;--manus-glow:rgba(191,95,255,0.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:#c8d8e8;font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:1}
+.container{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:20px}
+header{text-align:center;padding:40px 0 30px;border-bottom:1px solid var(--border);margin-bottom:30px}
+.header-tag{font-family:'Share Tech Mono';font-size:11px;color:var(--glow);letter-spacing:4px;opacity:.7;margin-bottom:12px}
+h1{font-family:'Orbitron';font-size:clamp(28px,5vw,52px);font-weight:900;color:#fff;text-shadow:0 0 30px rgba(0,200,255,.5);letter-spacing:2px;line-height:1.1}
+h1 span{color:var(--glow)}
+.subtitle{font-family:'Share Tech Mono';font-size:13px;color:rgba(200,216,232,.5);margin-top:10px;letter-spacing:2px}
+.setup-panel{background:rgba(6,15,30,.9);border:1px solid var(--border);border-radius:4px;padding:28px;margin-bottom:24px}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;align-items:end}
+.field-group label{display:block;font-family:'Share Tech Mono';font-size:10px;color:var(--glow);letter-spacing:3px;margin-bottom:8px;opacity:.8}
+.field-group input,.field-group select{width:100%;background:rgba(0,10,20,.8);border:1px solid var(--border);border-radius:3px;color:#c8d8e8;font-family:'Share Tech Mono';font-size:13px;padding:10px 14px;outline:none;transition:border-color .2s;appearance:none}
+.field-group input:focus,.field-group select:focus{border-color:var(--glow);box-shadow:0 0 12px rgba(0,200,255,.2)}
+.field-group select option{background:#060f1e}
+.btn-start{font-family:'Orbitron';font-size:12px;font-weight:700;letter-spacing:2px;background:transparent;border:1px solid var(--glow);color:var(--glow);padding:11px 24px;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;overflow:hidden}
+.btn-start::before{content:'';position:absolute;inset:0;background:var(--glow);opacity:0;transition:opacity .2s}
+.btn-start:hover{color:#000}.btn-start:hover::before{opacity:1}
+.btn-start span{position:relative;z-index:1}
+.btn-start:disabled{opacity:.4;cursor:not-allowed}
+.agents-row{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.agent-badge{display:flex;align-items:center;gap:8px;background:rgba(6,15,30,.8);border:1px solid;border-radius:3px;padding:8px 14px;font-family:'Share Tech Mono';font-size:11px;letter-spacing:1px;flex:1;min-width:140px}
+.agent-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.agent-badge.gemini{border-color:var(--gemini);color:var(--gemini)}.agent-badge.gemini .agent-dot{background:var(--gemini);box-shadow:0 0 6px var(--gemini)}
+.agent-badge.claude{border-color:var(--claude);color:var(--claude)}.agent-badge.claude .agent-dot{background:var(--claude);box-shadow:0 0 6px var(--claude)}
+.agent-badge.chatgpt{border-color:var(--chatgpt);color:var(--chatgpt)}.agent-badge.chatgpt .agent-dot{background:var(--chatgpt);box-shadow:0 0 6px var(--chatgpt)}
+.agent-badge.grok{border-color:var(--grok);color:var(--grok)}.agent-badge.grok .agent-dot{background:var(--grok);box-shadow:0 0 6px var(--grok)}
+.agent-badge.manus{border-color:var(--manus);color:var(--manus)}.agent-badge.manus .agent-dot{background:var(--manus);box-shadow:0 0 6px var(--manus)}
+.agent-status{margin-left:auto;font-size:9px;opacity:.5}
+.agent-status.active{opacity:1;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.status-bar{display:flex;align-items:center;gap:12px;font-family:'Share Tech Mono';font-size:11px;color:rgba(0,200,255,.6);margin-bottom:12px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--glow)}
+.status-dot.live{animation:blink .8s infinite}
+.status-text{flex:1}.status-count{opacity:.4}
+.debate-arena{background:rgba(3,8,16,.95);border:1px solid var(--border);border-radius:4px;min-height:420px;max-height:520px;overflow-y:auto;padding:20px;margin-bottom:20px;scroll-behavior:smooth}
+.debate-arena::-webkit-scrollbar{width:4px}
+.debate-arena::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:380px;gap:16px;opacity:.3}
+.empty-icon{font-size:48px}
+.empty-state p{font-family:'Share Tech Mono';font-size:12px;color:var(--glow);letter-spacing:3px}
+.msg{display:flex;gap:14px;margin-bottom:20px;animation:fadeIn .4s ease forwards}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-avatar{width:40px;height:40px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:10px;font-weight:700;flex-shrink:0;border:1px solid}
+.msg.gemini .msg-avatar{color:var(--gemini);border-color:var(--gemini);background:rgba(66,133,244,.08);box-shadow:0 0 12px var(--gemini-glow)}
+.msg.claude .msg-avatar{color:var(--claude);border-color:var(--claude);background:rgba(212,165,116,.08);box-shadow:0 0 12px var(--claude-glow)}
+.msg.chatgpt .msg-avatar{color:var(--chatgpt);border-color:var(--chatgpt);background:rgba(16,163,127,.08);box-shadow:0 0 12px var(--chatgpt-glow)}
+.msg.grok .msg-avatar{color:var(--grok);border-color:var(--grok);background:rgba(255,69,0,.08);box-shadow:0 0 12px var(--grok-glow)}
+.msg.manus .msg-avatar{color:var(--manus);border-color:var(--manus);background:rgba(191,95,255,.08);box-shadow:0 0 12px var(--manus-glow)}
+.msg-body{flex:1}
+.msg-header{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.msg-name{font-family:'Orbitron';font-size:11px;font-weight:700;letter-spacing:1px}
+.msg.gemini .msg-name{color:var(--gemini)}.msg.claude .msg-name{color:var(--claude)}.msg.chatgpt .msg-name{color:var(--chatgpt)}.msg.grok .msg-name{color:var(--grok)}.msg.manus .msg-name{color:var(--manus)}
+.msg-tag{font-family:'Share Tech Mono';font-size:9px;opacity:.4;letter-spacing:2px}
+.msg-content{font-family:'Rajdhani';font-size:15px;line-height:1.6;color:#b8ccd8;border-left:2px solid;padding-left:12px}
+.msg.gemini .msg-content{border-color:rgba(66,133,244,.3)}.msg.claude .msg-content{border-color:rgba(212,165,116,.3)}.msg.chatgpt .msg-content{border-color:rgba(16,163,127,.3)}.msg.grok .msg-content{border-color:rgba(255,69,0,.3)}.msg.manus .msg-content{border-color:rgba(191,95,255,.3)}
+.typing-indicator{display:flex;gap:14px;align-items:center;margin-bottom:16px;animation:fadeIn .3s ease}
+.typing-avatar{width:40px;height:40px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:10px;border:1px solid rgba(0,200,255,.3);background:rgba(0,200,255,.05);color:var(--glow)}
+.typing-dots{display:flex;gap:4px;align-items:center;padding:10px 14px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.1);border-radius:3px}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--glow);animation:bounce 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.typing-label{font-family:'Share Tech Mono';font-size:10px;color:var(--glow);opacity:.6;letter-spacing:2px}
+.summary-panel{background:rgba(6,15,30,.95);border:1px solid rgba(0,200,255,.2);border-radius:4px;padding:24px;margin-bottom:20px;display:none}
+.summary-panel.visible{display:block;animation:fadeIn .5s ease}
+.summary-title{font-family:'Orbitron';font-size:14px;font-weight:700;color:var(--glow);letter-spacing:3px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.summary-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.summary-content{font-family:'Rajdhani';font-size:15px;line-height:1.7;color:#b8ccd8;white-space:pre-wrap}
+.vote-panel{background:rgba(6,15,30,.9);border:1px solid var(--border);border-radius:4px;padding:24px;display:none}
+.vote-panel.visible{display:block;animation:fadeIn .5s ease}
+.vote-title{font-family:'Orbitron';font-size:12px;color:var(--glow);letter-spacing:3px;margin-bottom:16px}
+.vote-grid{display:flex;gap:10px;flex-wrap:wrap}
+.vote-btn{flex:1;min-width:120px;background:transparent;border:1px solid;border-radius:3px;padding:10px 16px;cursor:pointer;font-family:'Orbitron';font-size:10px;font-weight:700;letter-spacing:1px;transition:all .2s;position:relative;overflow:hidden}
+.vote-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s}
+.vote-btn:hover::before{opacity:.12}.vote-btn:hover{transform:translateY(-1px)}
+.vote-btn.gemini{border-color:var(--gemini);color:var(--gemini)}.vote-btn.gemini::before{background:var(--gemini)}
+.vote-btn.claude{border-color:var(--claude);color:var(--claude)}.vote-btn.claude::before{background:var(--claude)}
+.vote-btn.chatgpt{border-color:var(--chatgpt);color:var(--chatgpt)}.vote-btn.chatgpt::before{background:var(--chatgpt)}
+.vote-btn.grok{border-color:var(--grok);color:var(--grok)}.vote-btn.grok::before{background:var(--grok)}
+.vote-btn.manus{border-color:var(--manus);color:var(--manus)}.vote-btn.manus::before{background:var(--manus)}
+.vote-btn span{position:relative;z-index:1}
+.vote-result{font-family:'Share Tech Mono';font-size:13px;color:var(--glow);text-align:center;margin-top:16px;padding:12px;border:1px solid rgba(0,200,255,.2);border-radius:3px;background:rgba(0,200,255,.05);display:none}
+.vote-result.visible{display:block;animation:fadeIn .4s ease}
+footer{text-align:center;padding:24px 0;font-family:'Share Tech Mono';font-size:10px;color:rgba(200,216,232,.2);letter-spacing:2px;border-top:1px solid var(--border);margin-top:10px}
+.corner-tl,.corner-br{position:fixed;width:60px;height:60px;pointer-events:none;z-index:3}
+.corner-tl{top:16px;left:16px;border-top:2px solid rgba(0,200,255,.15);border-left:2px solid rgba(0,200,255,.15)}
+.corner-br{bottom:16px;right:16px;border-bottom:2px solid rgba(0,200,255,.15);border-right:2px solid rgba(0,200,255,.15)}
+@media(max-width:640px){.setup-grid{grid-template-columns:1fr}.agents-row{gap:6px}.agent-badge{min-width:100px;font-size:10px}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="corner-tl"></div>
+<div class="corner-br"></div>
+<div class="container">
+  <header>
+    <div class="header-tag">// SISTEMA DE DEBATE MULTIAGENTE v1.0</div>
+    <h1>FLUS <span>AI</span><br>¿Cómo hacer dinero?</h1>
+    <p class="subtitle">5 inteligencias artificiales. Tu país. Estrategias reales.</p>
+  </header>
+  <div class="setup-panel">
+    <div class="setup-grid">
+      <div class="field-group">
+        <label>// País objetivo</label>
+        <input type="text" id="countryInput" placeholder="Ej: Panamá, México, Colombia..."/>
+      </div>
+      <div class="field-group">
+        <label>// Idioma del debate</label>
+        <select id="langSelect">
+          <option value="es">Español</option>
+          <option value="en">English</option>
+          <option value="pt">Português</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="zh">中文</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+      <button class="btn-start" id="startBtn" onclick="startDebate()"><span>▶ INICIAR</span></button>
+    </div>
+  </div>
+  <div class="agents-row">
+    <div class="agent-badge gemini"><div class="agent-dot"></div>GEMINI<span class="agent-status" id="status-gemini">IDLE</span></div>
+    <div class="agent-badge claude"><div class="agent-dot"></div>CLAUDE<span class="agent-status" id="status-claude">IDLE</span></div>
+    <div class="agent-badge chatgpt"><div class="agent-dot"></div>CHATGPT<span class="agent-status" id="status-chatgpt">IDLE</span></div>
+    <div class="agent-badge grok"><div class="agent-dot"></div>GROK<span class="agent-status" id="status-grok">IDLE</span></div>
+    <div class="agent-badge manus"><div class="agent-dot"></div>MANUS<span class="agent-status" id="status-manus">IDLE</span></div>
+  </div>
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-text" id="statusText">Sistema listo. Ingresa un país para comenzar.</span>
+    <span class="status-count" id="msgCount">0 MSG</span>
+  </div>
+  <div class="debate-arena" id="debateArena">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">⬡</div>
+      <p>Esperando debate...</p>
+    </div>
+  </div>
+  <div class="summary-panel" id="summaryPanel">
+    <div class="summary-title">// Conclusión del sistema</div>
+    <div class="summary-content" id="summaryContent"></div>
+  </div>
+  <div class="vote-panel" id="votePanel">
+    <div class="vote-title">// ¿Cuál AI dio la mejor estrategia?</div>
+    <div class="vote-grid">
+      <button class="vote-btn gemini" onclick="vote('Gemini')"><span>GEMINI</span></button>
+      <button class="vote-btn claude" onclick="vote('Claude')"><span>CLAUDE</span></button>
+      <button class="vote-btn chatgpt" onclick="vote('ChatGPT')"><span>CHATGPT</span></button>
+      <button class="vote-btn grok" onclick="vote('Grok')"><span>GROK</span></button>
+      <button class="vote-btn manus" onclick="vote('Manus')"><span>MANUS</span></button>
+    </div>
+    <div class="vote-result" id="voteResult"></div>
+  </div>
+  <footer>FLUS AI DEBATE SYSTEM — POWERED BY CLAUDE API</footer>
+</div>
+<script>
+const AGENTS=[
+  {key:'gemini',name:'GEMINI',label:'Google Gemini',tag:'ANALYTICAL_MODE',personality:`You are Gemini, Google's AI. You are analytical and data-driven. You cite real GDP stats, sector performance, and economic data. Your style is precise and evidence-based. You disagree with other AIs when they lack data. Never introduce yourself.`},
+  {key:'claude',name:'CLAUDE',label:'Anthropic Claude',tag:'REASONING_MODE',personality:`You are Claude, Anthropic's AI. You focus on sustainable, ethical wealth-building. You challenge overly optimistic takes and push back on get-rich-quick schemes. Your style is balanced and intellectually honest. Never introduce yourself.`},
+  {key:'chatgpt',name:'CHATGPT',label:'OpenAI ChatGPT',tag:'CREATIVE_MODE',personality:`You are ChatGPT, OpenAI's AI. You are energetic and entrepreneurially minded. You focus on actionable side hustles, e-commerce, and digital business models that work NOW. Your style is practical with specific tactics. Never introduce yourself.`},
+  {key:'grok',name:'GROK',label:'xAI Grok',tag:'CONTRARIAN_MODE',personality:`You are Grok, xAI's AI. You are bold and contrarian. You challenge conventional wisdom and suggest high-risk high-reward opportunities like crypto and emerging markets. Your style is blunt, witty, and direct. You frequently disagree. Never introduce yourself.`},
+  {key:'manus',name:'MANUS',label:'Manus AI',tag:'EXECUTION_MODE',personality:`You are Manus, an autonomous AI agent. You think in systems and automation. You suggest specific tools, workflows, and scalable processes for building wealth. Your style is methodical and systems-focused. Never introduce yourself.`}
+];
+const LANG_NAMES={es:'Spanish',en:'English',pt:'Portuguese',fr:'French',de:'German',zh:'Mandarin Chinese',ar:'Arabic'};
+let messageCount=0,isDebating=false,conversationHistory=[];
+
+function setAgentStatus(key,status){const el=document.getElementById('status-'+key);if(!el)return;el.textContent=status;el.className='agent-status'+(status==='LIVE'?' active':'')}
+function setAllIdle(){AGENTS.forEach(a=>setAgentStatus(a.key,'IDLE'))}
+function updateStatus(text,live=false){document.getElementById('statusText').textContent=text;document.getElementById('statusDot').className='status-dot'+(live?' live':'')}
+function updateCount(){document.getElementById('msgCount').textContent=messageCount+' MSG'}
+function hideEmpty(){const e=document.getElementById('emptyState');if(e)e.remove()}
+
+function showTyping(agentKey){
+  removeTyping();
+  const agent=AGENTS.find(a=>a.key===agentKey);
+  const arena=document.getElementById('debateArena');
+  const div=document.createElement('div');
+  div.className='typing-indicator';div.id='typingIndicator';
+  div.innerHTML=`<div class="typing-avatar" style="border-color:var(--${agentKey});color:var(--${agentKey})">${agent.name.slice(0,2)}</div><div><div class="typing-dots"><span></span><span></span><span></span></div></div><span class="typing-label">${agent.name} PROCESANDO...</span>`;
+  arena.appendChild(div);arena.scrollTop=arena.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById('typingIndicator');if(t)t.remove()}
+
+function addMessage(agentKey,content){
+  removeTyping();
+  const agent=AGENTS.find(a=>a.key===agentKey);
+  const arena=document.getElementById('debateArena');
+  const div=document.createElement('div');
+  div.className='msg '+agentKey;
+  div.innerHTML=`<div class="msg-avatar">${agent.name.slice(0,2)}</div><div class="msg-body"><div class="msg-header"><span class="msg-name">${agent.label}</span><span class="msg-tag">[${agent.tag}]</span></div><div class="msg-content">${content.replace(/\n/g,'<br>')}</div></div>`;
+  arena.appendChild(div);arena.scrollTop=arena.scrollHeight;
+  messageCount++;updateCount();
+}
+
+async function callClaude(systemPrompt,messages){
+  const response=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:systemPrompt,messages})
+  });
+  const data=await response.json();
+  if(!data.content||!data.content[0])throw new Error('API error');
+  return data.content[0].text;
+}
+
+async function startDebate(){
+  if(isDebating)return;
+  const country=document.getElementById('countryInput').value.trim();
+  const langCode=document.getElementById('langSelect').value;
+  const lang=LANG_NAMES[langCode]||'Spanish';
+  if(!country){document.getElementById('countryInput').focus();updateStatus('⚠ Ingresa un país primero.');return}
+  isDebating=true;conversationHistory=[];messageCount=0;updateCount();hideEmpty();
+  const arena=document.getElementById('debateArena');arena.innerHTML='';
+  document.getElementById('summaryPanel').classList.remove('visible');
+  document.getElementById('votePanel').classList.remove('visible');
+  document.getElementById('voteResult').classList.remove('visible');
+  document.getElementById('startBtn').disabled=true;
+  setAllIdle();
+  const langInstruction=`CRITICAL: Respond ONLY in ${lang}.`;
+  const rounds=[{round:'OPENING',agents:[0,1,2,3,4]},{round:'REBUTTAL',agents:[2,4,1,3,0]}];
+  updateStatus('Debate iniciado: '+country+' — '+lang,true);
+  for(const round of rounds){
+    for(const agentIdx of round.agents){
+      if(!isDebating)break;
+      const agent=AGENTS[agentIdx];
+      setAgentStatus(agent.key,'LIVE');showTyping(agent.key);
+      updateStatus(agent.label+' analizando '+country+'...',true);
+      const contextMsg=conversationHistory.length>0?'\n\nPrevious statements:\n'+conversationHistory.slice(-6).map(m=>'['+m.agent+']: '+m.content).join('\n\n'):'';
+      const roundInstruction=round.round==='OPENING'
+        ?`Give your OPENING STATEMENT on best ways to make money in ${country}. Include specific opportunities, real economic context, and your unique perspective. 2-3 paragraphs.`
+        :`Give a sharp REBUTTAL. Disagree with at least one specific thing another AI said. Reinforce your recommendation for ${country}. 2-3 paragraphs.`;
+      const systemPrompt=`${agent.personality}\n\nDebate topic: best ways to make money in ${country}.\n${langInstruction}\n${roundInstruction}${contextMsg}`;
+      try{
+        const reply=await callClaude(systemPrompt,[{role:'user',content:`[${round.round}] Debate: best ways to make money in ${country}. Your turn.`}]);
+        setAgentStatus(agent.key,'DONE');addMessage(agent.key,reply);
+        conversationHistory.push({agent:agent.label,content:reply});
+        await new Promise(r=>setTimeout(r,700));
+      }catch(err){setAgentStatus(agent.key,'ERR');removeTyping();console.error(err)}
+    }
+  }
+  updateStatus('Generando conclusión...',true);setAllIdle();
+  try{
+    const summaryHistory=conversationHistory.map(m=>'['+m.agent+']: '+m.content).join('\n\n');
+    const summary=await callClaude(
+      `You are a neutral debate moderator.\n${langInstruction}\nSummarize the debate about making money in ${country}. List TOP 3 strategies with most consensus, main disagreements, and one final recommendation. Be concise and numbered.`,
+      [{role:'user',content:'Full debate:\n\n'+summaryHistory+'\n\nSummarize now.'}]
+    );
+    document.getElementById('summaryContent').textContent=summary;
+    document.getElementById('summaryPanel').classList.add('visible');
+    document.getElementById('votePanel').classList.add('visible');
+    updateStatus('Debate completado — '+messageCount+' mensajes.',false);
+  }catch(err){updateStatus('Error generando resumen.',false);console.error(err)}
+  isDebating=false;document.getElementById('startBtn').disabled=false;setAllIdle();
+}
+
+function vote(aiName){
+  document.getElementById('voteResult').textContent='✓ VOTASTE POR '+aiName.toUpperCase()+' — GRACIAS';
+  document.getElementById('voteResult').classList.add('visible');
+  document.querySelectorAll('.vote-btn').forEach(b=>b.disabled=true);
+}
+document.getElementById('countryInput').addEventListener('keydown',e=>{if(e.key==='Enter')startDebate()});
+</script>
+</body>
+</html>
