@@ -3,336 +3,769 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FLUS — Descubre cómo hacer dinero en tu país</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<title>invest.ai — El panel de 5 analistas IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --black:#080808;--dark:#111114;--card:#16161a;--border:#222228;
-  --text:#e8e8f0;--muted:#6b6b7a;--accent:#c9a84c;--accent2:#e8c87a;
-  --gemini:#4285F4;--claude:#D4A574;--chatgpt:#10A37F;--grok:#FF4500;--manus:#BF5FFF;
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f5;
+  --muted: #7a7a8e;
+  --accent: #6ee7b7;
+  --accent2: #3b82f6;
+  --gold: #f59e0b;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
 }
+*{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
-.container{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 24px}
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;position:relative}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
-.logo{font-family:'Syne',sans-serif;font-size:clamp(72px,15vw,120px);font-weight:800;letter-spacing:-4px;line-height:1;margin-bottom:8px;background:linear-gradient(135deg,#fff 0%,var(--accent2) 50%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.logo-sub{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;letter-spacing:6px;color:var(--accent);text-transform:uppercase;margin-bottom:32px;opacity:.8}
-.hero-desc{font-size:17px;color:var(--muted);max-width:480px;line-height:1.7;margin-bottom:48px;font-weight:300}
-.input-block{width:100%;max-width:520px;margin-bottom:16px}
-.input-wrap{position:relative;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:border-color .2s}
-.input-wrap:focus-within{border-color:var(--accent)}
-.country-input{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-family:'Inter',sans-serif;font-size:16px;padding:16px 20px;border-radius:12px}
-.country-input::placeholder{color:var(--muted)}
-.suggestions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
-.sug-btn{background:var(--card);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:12px;font-family:'Inter',sans-serif;padding:6px 14px;cursor:pointer;transition:all .2s}
-.sug-btn:hover{border-color:var(--accent);color:var(--accent)}
-.lang-wrap{display:flex;align-items:center;gap:10px;margin-bottom:32px}
-.lang-label{font-size:12px;color:var(--muted);letter-spacing:1px}
-.lang-select{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px;outline:none;cursor:pointer}
-.lang-select option{background:var(--dark)}
-.start-btn{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#000;border:none;border-radius:10px;padding:16px 40px;cursor:pointer;transition:all .2s}
-.start-btn:hover{background:var(--accent2);transform:translateY(-1px)}
-.start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.ai-row{display:flex;gap:20px;align-items:center;justify-content:center;margin-top:60px;opacity:.4;flex-wrap:wrap}
-.ai-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--muted)}
-.ai-dot{width:6px;height:6px;border-radius:50%}
-.debate-page{display:none;padding:40px 0 80px}
-.debate-page.active{display:block}
-.debate-header{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:32px}
-.debate-country{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#fff}
-.debate-country span{color:var(--accent)}
-.back-btn{background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-family:'Inter',sans-serif;padding:8px 16px;cursor:pointer;transition:all .2s}
-.back-btn:hover{border-color:var(--accent);color:var(--accent)}
-.agents-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
-.agent-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:11px;font-weight:500;transition:border-color .3s}
-.agent-chip.active{border-color:currentColor}
-.agent-chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
-.agent-chip.gemini{color:var(--gemini)}.agent-chip.claude{color:var(--claude)}.agent-chip.chatgpt{color:var(--chatgpt)}.agent-chip.grok{color:var(--grok)}.agent-chip.manus{color:var(--manus)}
-.chip-status{font-size:9px;opacity:.6;margin-left:2px}
-.chip-status.live{opacity:1;animation:pulse 1s infinite}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);z-index:100}
+.logo{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
+.logo span{color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:16px}
+.lang-toggle{display:flex;border:1px solid var(--border2);border-radius:8px;overflow:hidden}
+.lang-btn{padding:6px 14px;font-size:12px;font-family:var(--font-body);cursor:pointer;background:transparent;color:var(--muted);border:none;transition:all .2s}
+.lang-btn.active{background:var(--surface2);color:var(--text)}
+.btn-nav{padding:8px 20px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .2s;font-weight:500}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-filled{background:var(--accent);border:1px solid var(--accent);color:#0a0a0f;font-weight:600}
+.btn-filled:hover{background:#5cdba7}
+
+/* HERO */
+.hero{padding:100px 40px 80px;text-align:center;max-width:860px;margin:0 auto}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border:1px solid rgba(110,231,183,0.3);border-radius:100px;font-size:12px;color:var(--accent);margin-bottom:32px;background:rgba(110,231,183,0.05)}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.status-line{font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.status-dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
-.status-dot.live{animation:pulse .8s infinite;background:#4ade80}
-.chat-arena{background:var(--dark);border:1px solid var(--border);border-radius:16px;padding:24px;min-height:400px;max-height:560px;overflow-y:auto;margin-bottom:20px}
-.chat-arena::-webkit-scrollbar{width:3px}
-.chat-arena::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.empty-chat{display:flex;flex-direction:column;align-items:center;justify-content:center;height:350px;gap:12px;opacity:.2}
-.empty-chat p{font-size:13px;letter-spacing:2px;text-transform:uppercase}
-.msg{display:flex;gap:12px;margin-bottom:24px;animation:msgIn .35s ease forwards}
-@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.msg-logo{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;border:1px solid}
-.msg.gemini .msg-logo{border-color:var(--gemini);background:rgba(66,133,244,.1)}
-.msg.claude .msg-logo{border-color:var(--claude);background:rgba(212,165,116,.1)}
-.msg.chatgpt .msg-logo{border-color:var(--chatgpt);background:rgba(16,163,127,.1)}
-.msg.grok .msg-logo{border-color:var(--grok);background:rgba(255,69,0,.1)}
-.msg.manus .msg-logo{border-color:var(--manus);background:rgba(191,95,255,.1)}
-.msg.user .msg-logo{border-color:var(--accent);background:rgba(201,168,76,.1);color:var(--accent)}
-.msg-body{flex:1}
-.msg-name{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
-.msg.gemini .msg-name{color:var(--gemini)}.msg.claude .msg-name{color:var(--claude)}.msg.chatgpt .msg-name{color:var(--chatgpt)}.msg.grok .msg-name{color:var(--grok)}.msg.manus .msg-name{color:var(--manus)}.msg.user .msg-name{color:var(--accent)}
-.msg-text{font-size:14px;line-height:1.7;color:#c8c8d8;font-weight:300}
-.typing-msg{display:flex;gap:12px;margin-bottom:16px;animation:msgIn .3s ease}
-.typing-body{display:flex;align-items:center;gap:6px;padding:10px 0}
-.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite}
-.typing-dot:nth-child(2){animation-delay:.2s}.typing-dot:nth-child(3){animation-delay:.4s}
-@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
-.typing-name{font-size:11px;color:var(--muted);letter-spacing:1px}
-.conclusion-box{background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.03));border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:28px;margin-bottom:20px;display:none}
-.conclusion-box.visible{display:block;animation:msgIn .5s ease}
-.conclusion-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
-.conclusion-text{font-size:14px;line-height:1.8;color:#c8c8d8;white-space:pre-wrap}
-.user-input-area{display:flex;gap:10px;margin-bottom:20px}
-.user-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:12px 16px;outline:none;transition:border-color .2s;resize:none}
-.user-input:focus{border-color:var(--accent)}
-.user-input::placeholder{color:var(--muted)}
-.send-btn{background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:12px 20px;cursor:pointer;white-space:nowrap;transition:all .2s}
-.send-btn:hover{background:var(--accent2)}
-.send-btn:disabled{opacity:.4;cursor:not-allowed}
-.history-section{margin-top:60px;padding-top:40px;border-top:1px solid var(--border)}
-.section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px}
-.history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.history-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s}
-.history-card:hover{border-color:var(--accent);transform:translateY(-1px)}
-.hc-country{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
-.hc-date{font-size:11px;color:var(--muted)}
-.hc-preview{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-@media(max-width:600px){.logo{font-size:72px;letter-spacing:-2px}.user-input-area{flex-direction:column}.agents-bar{gap:6px}.agent-chip{font-size:10px;padding:5px 10px}}
+h1{font-family:var(--font-head);font-size:clamp(36px,6vw,72px);font-weight:800;line-height:1.05;letter-spacing:-2px;margin-bottom:24px}
+h1 .line2{color:var(--accent)}
+.hero-sub{font-size:18px;color:var(--muted);max-width:520px;margin:0 auto 40px;line-height:1.7;font-weight:300}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-hero{padding:14px 32px;border-radius:10px;font-size:15px;font-family:var(--font-body);font-weight:500;cursor:pointer;transition:all .2s}
+.btn-hero-main{background:var(--accent);border:none;color:#0a0a0f;font-weight:700}
+.btn-hero-main:hover{background:#5cdba7;transform:translateY(-1px)}
+.btn-hero-sec{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.btn-hero-sec:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* AI STRIP */
+.ai-strip{display:flex;justify-content:center;gap:0;padding:48px 40px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.ai-pill{display:flex;align-items:center;gap:10px;padding:12px 24px;border-right:1px solid var(--border)}
+.ai-pill:last-child{border-right:none}
+.ai-dot{width:10px;height:10px;border-radius:50%}
+.ai-pill-name{font-family:var(--font-head);font-size:14px;font-weight:600}
+.ai-pill-role{font-size:11px;color:var(--muted)}
+
+/* STATS BAR */
+.stats-bar{display:flex;justify-content:center;gap:60px;padding:40px;text-align:center}
+.stat-n{font-family:var(--font-head);font-size:36px;font-weight:800;color:var(--accent)}
+.stat-l{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* MAIN APP */
+.app-section{max-width:760px;margin:0 auto;padding:40px}
+.section-label{font-size:11px;font-weight:600;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:16px}
+.section-title{font-family:var(--font-head);font-size:28px;font-weight:700;margin-bottom:32px;letter-spacing:-0.5px}
+
+/* FORM */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:16px}
+.field-label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;display:block}
+input[type=text],input[type=email],input[type=password],textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;transition:border .2s}
+input:focus,textarea:focus{border-color:rgba(110,231,183,0.4)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+textarea{resize:vertical;min-height:80px}
+.chips-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}
+.chips-row.three{grid-template-columns:repeat(3,1fr)}
+.chip{padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;text-align:center;color:var(--muted);background:var(--surface2);transition:all .15s;font-family:var(--font-body)}
+.chip:hover{border-color:var(--border2);color:var(--text)}
+.chip.on{border-color:var(--accent);background:rgba(110,231,183,0.08);color:var(--accent);font-weight:500}
+.btn-start{width:100%;padding:14px;border-radius:10px;background:var(--accent);border:none;color:#0a0a0f;font-size:15px;font-weight:700;font-family:var(--font-head);cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:0.3px}
+.btn-start:hover{background:#5cdba7;transform:translateY(-1px)}
+.btn-start:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* DEBATE */
+.debate-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.progress-bar{height:3px;background:var(--surface2);border-radius:2px;margin-bottom:24px;overflow:hidden}
+.progress-fill{height:3px;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.ai-debate-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;transition:border .3s}
+.ai-debate-card.active{border-color:rgba(110,231,183,0.3)}
+.ai-debate-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ai-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:13px;font-weight:700;flex-shrink:0}
+.ai-info-name{font-family:var(--font-head);font-size:14px;font-weight:700}
+.ai-info-role{font-size:11px;color:var(--muted)}
+.ai-debate-text{font-size:14px;color:var(--text);line-height:1.7;min-height:20px}
+.typing-dots{display:flex;gap:4px;align-items:center;height:20px}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:tdot .8s infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes tdot{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* CONCLUSION */
+.conclusion-block{background:var(--surface);border:1px solid rgba(110,231,183,0.25);border-radius:16px;padding:24px;margin-top:8px}
+.conclusion-summary{font-size:14px;color:var(--accent);line-height:1.7;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.rank-row{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.rank-row:last-child{border-bottom:none}
+.rank-number{font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--accent);min-width:36px;line-height:1;opacity:.4}
+.rank-number.top{opacity:1;color:var(--gold)}
+.rank-body{flex:1}
+.rank-name{font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:4px}
+.rank-why{font-size:13px;color:var(--muted);line-height:1.6}
+.score-track{height:3px;background:var(--surface2);border-radius:2px;margin-top:8px}
+.score-bar{height:3px;border-radius:2px;background:var(--accent);transition:width .8s ease}
+.btn-reset{padding:10px 20px;border-radius:8px;background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .2s}
+.btn-reset:hover{border-color:var(--border2);color:var(--text)}
+
+/* STATS */
+.stats-section{max-width:760px;margin:0 auto;padding:0 40px 80px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.stats-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+.stats-card-title{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;font-weight:500}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-row:last-child{border-bottom:none}
+.stat-row-label{color:var(--text)}
+.stat-row-val{color:var(--accent);font-weight:500;font-family:var(--font-head)}
+
+/* AUTH MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:36px;width:100%;max-width:420px;position:relative}
+.modal-title{font-family:var(--font-head);font-size:24px;font-weight:800;margin-bottom:8px}
+.modal-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.modal-close{position:absolute;top:20px;right:20px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--text)}
+.field-group{margin-bottom:16px}
+.btn-modal{width:100%;padding:13px;border-radius:10px;background:var(--accent);border:none;color:#0a0a0f;font-size:14px;font-weight:700;font-family:var(--font-head);cursor:pointer;margin-top:8px;transition:all .2s}
+.btn-modal:hover{background:#5cdba7}
+.modal-switch{font-size:13px;color:var(--muted);text-align:center;margin-top:16px}
+.modal-switch a{color:var(--accent);cursor:pointer;text-decoration:none}
+.modal-error{font-size:13px;color:#f87171;margin-top:8px;text-align:center}
+.user-chip{display:flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--border2);border-radius:8px;font-size:13px;color:var(--text)}
+.user-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0}
+.user-chip button:hover{color:var(--text)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:32px 40px;text-align:center;color:var(--muted);font-size:13px}
+
+/* PAGE SECTIONS */
+.page{display:none}
+.page.active{display:block}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  nav{padding:16px 20px}
+  .hero{padding:60px 20px 48px}
+  .ai-strip{flex-wrap:wrap;padding:24px 20px}
+  .ai-pill{border-right:none;border-bottom:1px solid var(--border);width:50%}
+  .stats-bar{gap:30px;flex-wrap:wrap;padding:24px 20px}
+  .app-section,.stats-section{padding:24px 20px}
+  .chips-row{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:1fr}
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease forwards}
 </style>
 </head>
-  <body>
-<div class="hero" id="heroPage">
-  <div class="logo">FLUS</div>
-  <div class="logo-sub">AI Financial Intelligence</div>
-  <p class="hero-desc">5 inteligencias artificiales analizan tu país y debaten para darte las mejores oportunidades de generar dinero.</p>
-  <div class="input-block">
-    <div class="input-wrap">
-      <input type="text" class="country-input" id="countryInput" placeholder="¿En qué país vives?" autocomplete="off"/>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">invest<span>.ai</span></div>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+    <div id="auth-area">
+      <button class="btn-nav btn-outline" onclick="openModal('login')" id="btn-login">Entrar</button>
+      <button class="btn-nav btn-filled" onclick="openModal('register')" id="btn-register">Registrarse</button>
+    </div>
+    <div id="user-area" style="display:none">
+      <div class="user-chip">
+        <span id="user-email-display"></span>
+        <button onclick="signOut()">salir</button>
+      </div>
     </div>
   </div>
-  <div class="suggestions">
-    <button class="sug-btn" onclick="setSuggest('Panamá')">🇵🇦 Panamá</button>
-    <button class="sug-btn" onclick="setSuggest('México')">🇲🇽 México</button>
-    <button class="sug-btn" onclick="setSuggest('Colombia')">🇨🇴 Colombia</button>
-    <button class="sug-btn" onclick="setSuggest('Argentina')">🇦🇷 Argentina</button>
-    <button class="sug-btn" onclick="setSuggest('España')">🇪🇸 España</button>
-    <button class="sug-btn" onclick="setSuggest('Estados Unidos')">🇺🇸 USA</button>
+</nav>
+
+<!-- HERO PAGE -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-badge"><span class="hero-badge-dot"></span><span id="badge-text">5 analistas IA · 1 conclusión definitiva</span></div>
+    <h1 id="hero-h1">El panel de IA que<br><span class="line2">debate tu inversión</span></h1>
+    <p class="hero-sub" id="hero-sub">Dinos tu país, tu capital y tu pregunta. 5 IAs con perspectivas distintas analizan, debaten y te dan el mejor negocio para ti.</p>
+    <div class="hero-cta">
+      <button class="btn-hero btn-hero-main" onclick="goToApp()" id="hero-cta1">Iniciar debate →</button>
+      <button class="btn-hero btn-hero-sec" onclick="scrollToStats()" id="hero-cta2">Ver estadísticas</button>
+    </div>
   </div>
-  <div class="lang-wrap">
-    <span class="lang-label">IDIOMA</span>
-    <select class="lang-select" id="langSelect">
-      <option value="es">Español</option>
-      <option value="en">English</option>
-      <option value="pt">Português</option>
-      <option value="fr">Français</option>
-    </select>
+
+  <div class="ai-strip">
+    <div class="ai-pill"><div class="ai-dot" style="background:#10A37F"></div><div><div class="ai-pill-name">ChatGPT</div><div class="ai-pill-role">Tendencias globales</div></div></div>
+    <div class="ai-pill"><div class="ai-dot" style="background:#D97706"></div><div><div class="ai-pill-name">Claude</div><div class="ai-pill-role">Riesgo y sostenibilidad</div></div></div>
+    <div class="ai-pill"><div class="ai-dot" style="background:#4285F4"></div><div><div class="ai-pill-name">Gemini</div><div class="ai-pill-role">Contexto local</div></div></div>
+    <div class="ai-pill"><div class="ai-dot" style="background:#7C3AED"></div><div><div class="ai-pill-name">Grok</div><div class="ai-pill-role">Disrupción y tech</div></div></div>
+    <div class="ai-pill"><div class="ai-dot" style="background:#DC2626"></div><div><div class="ai-pill-name">Manus</div><div class="ai-pill-role">Ejecución y ROI</div></div></div>
   </div>
-  <button class="start-btn" id="startBtn" onclick="startDebate()">INICIAR DEBATE</button>
-  <div class="ai-row">
-    <div class="ai-pill"><div class="ai-dot" style="background:var(--gemini)"></div>GEMINI</div>
-    <div class="ai-pill"><div class="ai-dot" style="background:var(--claude)"></div>CLAUDE</div>
-    <div class="ai-pill"><div class="ai-dot" style="background:var(--chatgpt)"></div>CHATGPT</div>
-    <div class="ai-pill"><div class="ai-dot" style="background:var(--grok)"></div>GROK</div>
-    <div class="ai-pill"><div class="ai-dot" style="background:var(--manus)"></div>MANUS</div>
+
+  <div class="stats-bar" id="stats-anchor">
+    <div><div class="stat-n" id="stat-debates">—</div><div class="stat-l">debates realizados</div></div>
+    <div><div class="stat-n" id="stat-countries">—</div><div class="stat-l">países analizados</div></div>
+    <div><div class="stat-n" id="stat-users">—</div><div class="stat-l">usuarios activos</div></div>
   </div>
 </div>
 
-<div class="debate-page" id="debatePage">
-  <div class="container">
-    <div class="debate-header">
-      <div class="debate-country">FLUS <span id="debateCountryTitle"></span></div>
-      <button class="back-btn" onclick="goBack()">← Nuevo debate</button>
+<!-- APP PAGE -->
+<div id="page-app" class="page">
+  <div class="app-section">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <button class="btn-reset" onclick="goHome()">← <span>Inicio</span></button>
     </div>
-    <div class="agents-bar">
-      <div class="agent-chip gemini" id="chip-gemini"><div class="dot"></div>GEMINI<span class="chip-status" id="cs-gemini">IDLE</span></div>
-      <div class="agent-chip claude" id="chip-claude"><div class="dot"></div>CLAUDE<span class="chip-status" id="cs-claude">IDLE</span></div>
-      <div class="agent-chip chatgpt" id="chip-chatgpt"><div class="dot"></div>CHATGPT<span class="chip-status" id="cs-chatgpt">IDLE</span></div>
-      <div class="agent-chip grok" id="chip-grok"><div class="dot"></div>GROK<span class="chip-status" id="cs-grok">IDLE</span></div>
-      <div class="agent-chip manus" id="chip-manus"><div class="dot"></div>MANUS<span class="chip-status" id="cs-manus">IDLE</span></div>
+    <div class="section-label">Tu consulta</div>
+    <div class="section-title" id="app-title">Cuéntanos tu situación</div>
+
+    <!-- STEP 1: FORM -->
+    <div id="form-step">
+      <div class="form-card">
+        <span class="field-label">País donde quieres invertir</span>
+        <input type="text" id="country" placeholder="Ej: Panamá, México, Colombia..." style="margin-bottom:20px">
+
+        <span class="field-label">Capital disponible</span>
+        <div class="chips-row" id="cap-grid">
+          <div class="chip" onclick="pick(this,'cap')" data-v="menos de $5k">Menos de $5k</div>
+          <div class="chip" onclick="pick(this,'cap')" data-v="$5k–$20k">$5k – $20k</div>
+          <div class="chip" onclick="pick(this,'cap')" data-v="$20k–$100k">$20k – $100k</div>
+          <div class="chip" onclick="pick(this,'cap')" data-v="más de $100k">Más de $100k</div>
+        </div>
+
+        <span class="field-label" style="margin-top:20px;display:block">Nivel de experiencia</span>
+        <div class="chips-row" id="exp-grid">
+          <div class="chip" onclick="pick(this,'exp')" data-v="ninguna">Sin experiencia</div>
+          <div class="chip" onclick="pick(this,'exp')" data-v="algo">Algo de experiencia</div>
+          <div class="chip" onclick="pick(this,'exp')" data-v="media">Experiencia media</div>
+          <div class="chip" onclick="pick(this,'exp')" data-v="avanzada">Avanzado</div>
+        </div>
+
+        <span class="field-label" style="margin-top:20px;display:block">Tolerancia al riesgo</span>
+        <div class="chips-row three" id="risk-grid">
+          <div class="chip" onclick="pick(this,'risk')" data-v="bajo">Bajo</div>
+          <div class="chip" onclick="pick(this,'risk')" data-v="medio">Medio</div>
+          <div class="chip" onclick="pick(this,'risk')" data-v="alto">Alto</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <span class="field-label">Tu pregunta concreta</span>
+        <textarea id="question" placeholder="Ej: ¿Cuál es el mejor negocio para empezar con $10k en Panamá sin experiencia?"></textarea>
+      </div>
+
+      <button class="btn-start" onclick="startDebate()" id="btn-start">Iniciar debate →</button>
     </div>
-    <div class="status-line">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">Iniciando debate...</span>
+
+    <!-- STEP 2: DEBATE -->
+    <div id="debate-step" style="display:none">
+      <div class="debate-header">
+        <div>
+          <div class="section-label" id="debate-label-text">Debate en vivo</div>
+          <div style="font-size:13px;color:var(--muted)" id="debate-status-text">Iniciando análisis...</div>
+        </div>
+        <button class="btn-reset" onclick="resetForm()">Nueva consulta</button>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+      <div id="debate-cards"></div>
+      <div id="conclusion-block" style="display:none" class="fade-in">
+        <div class="section-label" style="margin-top:32px">Conclusión del panel</div>
+        <div class="conclusion-block" id="conclusion-inner"></div>
+        <button class="btn-start" style="margin-top:16px" onclick="resetForm()">Hacer otra consulta →</button>
+      </div>
     </div>
-    <div class="chat-arena" id="chatArena">
-      <div class="empty-chat" id="emptyChat"><p>Cargando debate...</p></div>
-    </div>
-    <div class="conclusion-box" id="conclusionBox">
-      <div class="conclusion-title">★ Conclusión Final del Panel</div>
-      <div class="conclusion-text" id="conclusionText"></div>
-    </div>
-    <div class="user-input-area" id="userInputArea" style="display:none">
-      <textarea class="user-input" id="userQuestion" rows="1" placeholder="Haz una pregunta al panel de AIs..."></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendUserQuestion()">ENVIAR</button>
-    </div>
-    <div class="history-section" id="historySection" style="display:none">
-      <div class="section-title">Debates anteriores</div>
-      <div class="history-grid" id="historyGrid"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-section">
+    <div class="section-label">Estadísticas globales</div>
+    <div class="stats-grid">
+      <div class="stats-card">
+        <div class="stats-card-title">Países más consultados</div>
+        <div id="top-countries-list"><div style="color:var(--muted);font-size:13px">Cargando...</div></div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-title">Temas más debatidos</div>
+        <div id="top-topics-list"><div style="color:var(--muted);font-size:13px">Cargando...</div></div>
+      </div>
     </div>
   </div>
 </div>
-    <script>
-const SUPABASE_URL='https://wkgpbmusywhwpxpftypi.supabase.co';
-const SUPABASE_KEY='sb_publishable_gXlPSDyZy0RaF9oaXT5Auw_Qt3DCejj';
-const CLAUDE_KEY='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';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const AGENTS=[
-  {key:'gemini',name:'GEMINI',label:'Google Gemini',emoji:'G',personality:`You are Gemini, Google's AI. Analytical and data-driven. You cite real GDP figures, sector growth rates, and economic indicators. You focus on scalable opportunities. Style: precise, evidence-based. Never introduce yourself.`},
-  {key:'claude',name:'CLAUDE',label:'Anthropic Claude',emoji:'C',personality:`You are Claude, Anthropic's AI. Thoughtful and nuanced. You focus on sustainable low-risk opportunities matching local infrastructure and culture. Style: balanced, honest, risk-aware. Never introduce yourself.`},
-  {key:'chatgpt',name:'CHATGPT',label:'OpenAI ChatGPT',emoji:'G',personality:`You are ChatGPT, OpenAI's AI. Entrepreneurial and practical. You focus on actionable business ideas, digital opportunities, and side hustles that work TODAY. Style: energetic, specific. Never introduce yourself.`},
-  {key:'grok',name:'GROK',label:'xAI Grok',emoji:'X',personality:`You are Grok, xAI's AI. Bold and contrarian. You spot overlooked opportunities and unconventional plays. You call out when others are too conservative. Style: direct, sharp, provocative. Never introduce yourself.`},
-  {key:'manus',name:'MANUS',label:'Manus AI',emoji:'M',personality:`You are Manus, an autonomous AI agent. You think in systems and automation. You identify opportunities that scale with minimal ongoing effort. Style: methodical, systems-focused. Never introduce yourself.`}
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-login">
+      <div class="modal-title" id="login-title">Bienvenido</div>
+      <div class="modal-sub" id="login-sub">Entra con tu cuenta para guardar tu historial</div>
+      <div class="field-group">
+        <span class="field-label">Email</span>
+        <input type="email" id="login-email" placeholder="tu@email.com">
+      </div>
+      <div class="field-group">
+        <span class="field-label" id="login-pass-label">Contraseña</span>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      <div class="modal-error" id="login-error"></div>
+      <button class="btn-modal" id="btn-do-login" onclick="doLogin()">Entrar →</button>
+      <div class="modal-switch" id="switch-to-register">¿No tienes cuenta? <a onclick="openModal('register')">Regístrate</a></div>
+    </div>
+    <div id="modal-register" style="display:none">
+      <div class="modal-title" id="reg-title">Crear cuenta</div>
+      <div class="modal-sub" id="reg-sub">Únete para guardar tus debates y ver estadísticas</div>
+      <div class="field-group">
+        <span class="field-label">Email</span>
+        <input type="email" id="reg-email" placeholder="tu@email.com">
+      </div>
+      <div class="field-group">
+        <span class="field-label" id="reg-pass-label">Contraseña</span>
+        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="modal-error" id="reg-error"></div>
+      <button class="btn-modal" id="btn-do-register" onclick="doRegister()">Crear cuenta →</button>
+      <div class="modal-switch" id="switch-to-login">¿Ya tienes cuenta? <a onclick="openModal('login')">Entra aquí</a></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>invest<span style="color:var(--accent)">.ai</span> — </span><span>El panel de 5 analistas IA para tus inversiones</span>
+</footer>
+
+<script>
+// ── SUPABASE CONFIG ──────────────────────────────────────────
+// REEMPLAZA con tus credenciales de Supabase
+const SUPABASE_URL = 'https://wkgpbmusywhwpxpftypi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indrcmdwam11c3l3aHdweHBmdHlwaSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzc3NDI1MjE3LCJleHAiOjIwOTMwMDEyMTd9.mIGDYDXIC-5oCNE-YYqBm9vGjZW69cvLNNYyl4fNgi4';
+const ANTHROPIC_KEY = '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';
+// Supabase es opcional
+const SUPABASE_READY = SUPABASE_URL !== 'https://wkgpbmusywhwpxpftypi.supabase.co';
+let sb = null;
+if (SUPABASE_READY) {
+  try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) {}
+}
+
+// ── STATE ────────────────────────────────────────────────────
+let lang = 'es';
+let sel = { cap: null, exp: null, risk: null };
+let currentUser = null;
+
+// ── AIs ──────────────────────────────────────────────────────
+const AIs = [
+  { id: 'chatgpt', name: 'ChatGPT', color: '#10A37F', bg: 'rgba(16,163,127,0.12)',
+    role: { es: 'Tendencias globales de mercado', en: 'Global market trends' },
+    prompt: { es: 'Eres ChatGPT analizando oportunidades de negocio. Tu perspectiva se basa en tendencias globales de mercado, datos de crecimiento de industrias y casos de éxito internacionales. Eres optimista pero respaldado por datos. Analiza qué industrias están creciendo globalmente y cómo aplican al perfil dado. Responde en 3-4 oraciones naturales, sin listas.',
+              en: 'You are ChatGPT analyzing business opportunities. Your perspective is based on global market trends, industry growth data and international success cases. You are optimistic but data-driven. Analyze which industries are growing globally and how they apply to the given profile. Respond in 3-4 natural sentences, no lists.' }},
+  { id: 'claude', name: 'Claude', color: '#D97706', bg: 'rgba(217,119,6,0.1)',
+    role: { es: 'Riesgo y sostenibilidad', en: 'Risk & sustainability' },
+    prompt: { es: 'Eres Claude analizando oportunidades de negocio. Tu enfoque es el riesgo real, la sostenibilidad a largo plazo y los factores que hacen fracasar negocios. Eres más cauto que los otros. Reacciona a lo que dijeron los analistas anteriores, cuestiona o matiza, enfócate en riesgos y sostenibilidad para este perfil. Responde en 3-4 oraciones naturales, sin listas.',
+              en: 'You are Claude analyzing business opportunities. Your focus is real risk, long-term sustainability and factors that make businesses fail. You are more cautious. React to what previous analysts said, question or nuance, focus on risks and sustainability for this profile. Respond in 3-4 natural sentences, no lists.' }},
+  { id: 'gemini', name: 'Gemini', color: '#4285F4', bg: 'rgba(66,133,244,0.1)',
+    role: { es: 'Contexto local y cultura', en: 'Local context & culture' },
+    prompt: { es: 'Eres Gemini analizando oportunidades de negocio. Tu especialidad es el contexto local: cultura, regulaciones, comportamiento del consumidor y factores específicos del país. Entiendes que lo que funciona en USA no siempre funciona en Latinoamérica. Aporta perspectiva local específica del país mencionado, reaccionando a lo anterior. Responde en 3-4 oraciones naturales, sin listas.',
+              en: 'You are Gemini analyzing business opportunities. Your specialty is local context: culture, regulations, consumer behavior and country-specific factors. Provide specific local context for the mentioned country, reacting to previous points. Respond in 3-4 natural sentences, no lists.' }},
+  { id: 'grok', name: 'Grok', color: '#7C3AED', bg: 'rgba(124,58,237,0.1)',
+    role: { es: 'Disrupción y tech', en: 'Disruption & tech' },
+    prompt: { es: 'Eres Grok analizando oportunidades de negocio. Tu ángulo es disruptivo: tecnología, modelos de negocio no convencionales, tendencias emergentes que otros ignoran. Eres el más atrevido del panel. Propón algo diferente y menos obvio con potencial real para este perfil, cuestionando lo convencional. Responde en 3-4 oraciones naturales, sin listas.',
+              en: 'You are Grok analyzing business opportunities. Your angle is disruptive: technology, unconventional business models, emerging trends others ignore. You are the boldest on the panel. Propose something different and less obvious with real potential for this profile. Respond in 3-4 natural sentences, no lists.' }},
+  { id: 'manus', name: 'Manus', color: '#DC2626', bg: 'rgba(220,38,38,0.1)',
+    role: { es: 'Ejecución práctica y ROI', en: 'Practical execution & ROI' },
+    prompt: { es: 'Eres Manus analizando oportunidades de negocio. Tu foco es la ejecución práctica: cuánto capital real se necesita, cuánto tiempo para ver retorno, qué pasos concretos dar primero. Eres el más práctico del panel. Concluye el debate siendo muy concreto sobre qué hacer primero y qué retorno esperar. Responde en 3-4 oraciones naturales, sin listas.',
+              en: 'You are Manus analyzing business opportunities. Your focus is practical execution: real capital needed, time to ROI, concrete first steps. You are the most practical on the panel. Conclude the debate being very concrete about what to do first and what return to expect. Respond in 3-4 natural sentences, no lists.' }}
 ];
-const LANG_MAP={es:'Spanish',en:'English',pt:'Portuguese',fr:'French'};
-let country='',lang='',isDebating=false;
 
-function setSuggest(c){document.getElementById('countryInput').value=c}
-function setChipStatus(key,status){
-  const cs=document.getElementById('cs-'+key);
-  const chip=document.getElementById('chip-'+key);
-  if(!cs)return;
-  cs.textContent=status;
-  cs.className='chip-status'+(status==='LIVE'?' live':'');
-  chip.classList.toggle('active',status==='LIVE');
+// ── LANG ─────────────────────────────────────────────────────
+const T = {
+  es: {
+    badge: '5 analistas IA · 1 conclusión definitiva',
+    heroH1: 'El panel de IA que<br><span class="line2">debate tu inversión</span>',
+    heroSub: 'Dinos tu país, tu capital y tu pregunta. 5 IAs con perspectivas distintas analizan, debaten y te dan el mejor negocio para ti.',
+    heroCta1: 'Iniciar debate →', heroCta2: 'Ver estadísticas',
+    statDebates: 'debates realizados', statCountries: 'países analizados', statUsers: 'usuarios activos',
+    appTitle: 'Cuéntanos tu situación',
+    labelCountry: 'País donde quieres invertir', labelCap: 'Capital disponible',
+    labelExp: 'Nivel de experiencia', labelRisk: 'Tolerancia al riesgo', labelQ: 'Tu pregunta concreta',
+    caps: ['Menos de $5k','$5k – $20k','$20k – $100k','Más de $100k'],
+    exps: ['Sin experiencia','Algo de experiencia','Experiencia media','Avanzado'],
+    risks: ['Bajo','Medio','Alto'],
+    btnStart: 'Iniciar debate →',
+    debateLabel: 'Debate en vivo', btnReset: 'Nueva consulta',
+    concLabel: 'Conclusión del panel', btnAnother: 'Hacer otra consulta →',
+    statsLabel: 'Estadísticas globales', statCountriesTitle: 'Países más consultados', statTopicsTitle: 'Temas más debatidos',
+    loginTitle: 'Bienvenido', loginSub: 'Entra con tu cuenta para guardar tu historial',
+    loginPassLabel: 'Contraseña', btnLogin: 'Entrar →',
+    switchToReg: '¿No tienes cuenta? <a onclick="openModal(\'register\')">Regístrate</a>',
+    regTitle: 'Crear cuenta', regSub: 'Únete para guardar tus debates y ver estadísticas',
+    regPassLabel: 'Contraseña', btnReg: 'Crear cuenta →',
+    switchToLogin: '¿Ya tienes cuenta? <a onclick="openModal(\'login\')">Entra aquí</a>',
+    footerText: 'El panel de 5 analistas IA para tus inversiones',
+    navLogin: 'Entrar', navRegister: 'Registrarse',
+    qPlaceholder: 'Ej: ¿Cuál es el mejor negocio para empezar con $10k en Panamá sin experiencia?',
+    countryPlaceholder: 'Ej: Panamá, México, Colombia...',
+    signOut: 'salir'
+  },
+  en: {
+    badge: '5 AI analysts · 1 definitive conclusion',
+    heroH1: 'The AI panel that<br><span class="line2">debates your investment</span>',
+    heroSub: 'Tell us your country, capital and question. 5 AIs with different perspectives analyze, debate and give you the best business for you.',
+    heroCta1: 'Start debate →', heroCta2: 'View statistics',
+    statDebates: 'debates completed', statCountries: 'countries analyzed', statUsers: 'active users',
+    appTitle: 'Tell us your situation',
+    labelCountry: 'Country where you want to invest', labelCap: 'Available capital',
+    labelExp: 'Experience level', labelRisk: 'Risk tolerance', labelQ: 'Your specific question',
+    caps: ['Less than $5k','$5k – $20k','$20k – $100k','More than $100k'],
+    exps: ['No experience','Some experience','Intermediate','Advanced'],
+    risks: ['Low','Medium','High'],
+    btnStart: 'Start debate →',
+    debateLabel: 'Live debate', btnReset: 'New query',
+    concLabel: 'Panel conclusion', btnAnother: 'Ask another question →',
+    statsLabel: 'Global stats', statCountriesTitle: 'Most consulted countries', statTopicsTitle: 'Most debated topics',
+    loginTitle: 'Welcome back', loginSub: 'Sign in to save your debate history',
+    loginPassLabel: 'Password', btnLogin: 'Sign in →',
+    switchToReg: 'No account? <a onclick="openModal(\'register\')">Sign up</a>',
+    regTitle: 'Create account', regSub: 'Join to save your debates and view stats',
+    regPassLabel: 'Password', btnReg: 'Create account →',
+    switchToLogin: 'Already have an account? <a onclick="openModal(\'login\')">Sign in</a>',
+    footerText: 'The 5 AI analyst panel for your investments',
+    navLogin: 'Sign in', navRegister: 'Sign up',
+    qPlaceholder: 'Ex: What\'s the best business to start with $10k in Panama with no experience?',
+    countryPlaceholder: 'Ex: Panama, Mexico, Colombia...',
+    signOut: 'sign out'
+  }
+};
+
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setHTML(id, val) { const el = document.getElementById(id); if (el) el.innerHTML = val; }
+function setPlaceholder(id, val) { const el = document.getElementById(id); if (el) el.placeholder = val; }
+
+function setLang(l) {
+  lang = l;
+  const t = T[l];
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === l.toUpperCase()));
+
+  // Hero
+  setHTML('badge-text', t.badge);
+  setHTML('hero-h1', t.heroH1);
+  setText('hero-sub', t.heroSub);
+  setText('hero-cta1', t.heroCta1);
+  setText('hero-cta2', t.heroCta2);
+
+  // Stats labels (hero page)
+  const statLbls = document.querySelectorAll('.stat-l');
+  const lbKeys = ['statDebates','statCountries','statUsers'];
+  statLbls.forEach((el,i) => { if(lbKeys[i]) el.textContent = t[lbKeys[i]]; });
+
+  // App
+  setText('app-title', t.appTitle);
+  setText('debate-label-text', t.debateLabel);
+  setText('btn-start', t.btnStart);
+  setPlaceholder('country', t.countryPlaceholder);
+  setPlaceholder('question', t.qPlaceholder);
+
+  // Chips
+  const capChips = document.querySelectorAll('#cap-grid .chip');
+  t.caps.forEach((c,i) => { if(capChips[i]) capChips[i].textContent = c; });
+  const expChips = document.querySelectorAll('#exp-grid .chip');
+  t.exps.forEach((c,i) => { if(expChips[i]) expChips[i].textContent = c; });
+  const riskChips = document.querySelectorAll('#risk-grid .chip');
+  t.risks.forEach((c,i) => { if(riskChips[i]) riskChips[i].textContent = c; });
+
+  // Modal
+  setText('login-title', t.loginTitle);
+  setText('login-sub', t.loginSub);
+  setText('login-pass-label', t.loginPassLabel);
+  setText('btn-do-login', t.btnLogin);
+  setHTML('switch-to-register', t.switchToReg);
+  setText('reg-title', t.regTitle);
+  setText('reg-sub', t.regSub);
+  setText('reg-pass-label', t.regPassLabel);
+  setText('btn-do-register', t.btnReg);
+  setHTML('switch-to-login', t.switchToLogin);
+
+  // Nav buttons
+  setText('btn-login', t.navLogin);
+  setText('btn-register', t.navRegister);
 }
-function setAllIdle(){AGENTS.forEach(a=>setChipStatus(a.key,'IDLE'))}
-function updateStatus(text,live=false){
-  document.getElementById('statusText').textContent=text;
-  document.getElementById('statusDot').className='status-dot'+(live?' live':'');
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function goToApp() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-app').classList.add('active');
+  window.scrollTo(0, 0);
+  loadStats();
 }
-function hideEmpty(){const e=document.getElementById('emptyChat');if(e)e.remove()}
-function showTyping(agentKey){
-  removeTyping();
-  const agent=AGENTS.find(a=>a.key===agentKey);
-  const arena=document.getElementById('chatArena');
-  const div=document.createElement('div');
-  div.className='typing-msg';div.id='typingMsg';
-  div.innerHTML=`<div class="msg-logo" style="border-color:var(--${agentKey});background:rgba(0,0,0,.2);color:var(--${agentKey})">${agent.emoji}</div><div class="typing-body"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div><span class="typing-name">${agent.name} analizando...</span>`;
-  arena.appendChild(div);arena.scrollTop=arena.scrollHeight;
+function goHome() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-home').classList.add('active');
+  window.scrollTo(0, 0);
 }
-function removeTyping(){const t=document.getElementById('typingMsg');if(t)t.remove()}
-function addMessage(agentKey,content,isUser=false){
-  removeTyping();
-  const arena=document.getElementById('chatArena');
-  const agent=isUser?null:AGENTS.find(a=>a.key===agentKey);
-  const div=document.createElement('div');
-  div.className='msg '+(isUser?'user':agentKey);
-  const emoji=isUser?'👤':agent.emoji;
-  const name=isUser?'TÚ':agent.label.toUpperCase();
-  div.innerHTML=`<div class="msg-logo">${emoji}</div><div class="msg-body"><div class="msg-name">${name}</div><div class="msg-text">${content.replace(/\n/g,'<br>')}</div></div>`;
-  arena.appendChild(div);arena.scrollTop=arena.scrollHeight;
+function scrollToStats() {
+  document.getElementById('stats-anchor').scrollIntoView({ behavior: 'smooth' });
 }
-async function callClaude(systemPrompt,messages){
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:systemPrompt,messages})
-  });
-  const data=await res.json();
-  if(!data.content||!data.content[0])throw new Error('API error');
-  return data.content[0].text;
+
+// ── CHIPS ────────────────────────────────────────────────────
+function pick(el, group) {
+  const grids = { cap: 'cap-grid', exp: 'exp-grid', risk: 'risk-grid' };
+  document.getElementById(grids[group]).querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  sel[group] = el.dataset.v;
 }
-async function startDebate(){
-  country=document.getElementById('countryInput').value.trim();
-  lang=LANG_MAP[document.getElementById('langSelect').value]||'Spanish';
-  if(!country){document.getElementById('countryInput').focus();return}
-  document.getElementById('heroPage').style.display='none';
-  document.getElementById('debatePage').classList.add('active');
-  document.getElementById('debateCountryTitle').textContent=country;
-  document.getElementById('chatArena').innerHTML='';
-  document.getElementById('conclusionBox').classList.remove('visible');
-  document.getElementById('userInputArea').style.display='none';
-  setAllIdle();
-  isDebating=true;
-  const langI=`CRITICAL: Respond ONLY in ${lang}.`;
-  const rounds=[{round:'OPENING',agents:[0,1,2,3,4]},{round:'REBUTTAL',agents:[2,4,1,3,0]}];
-  let convHistory=[];
-  updateStatus(`Debate iniciado — ${country}`,true);
-  for(const round of rounds){
-    for(const idx of round.agents){
-      const agent=AGENTS[idx];
-      setChipStatus(agent.key,'LIVE');
-      showTyping(agent.key);
-      updateStatus(`${agent.label} analizando ${country}...`,true);
-      const context=convHistory.length>0?'\n\nWhat other AIs said:\n'+convHistory.slice(-5).map(m=>`[${m.agent}]: ${m.text}`).join('\n\n'):'';
-      const instruction=round.round==='OPENING'
-        ?`Give your OPENING on the best ways to make money in ${country}. Include specific opportunities (businesses, investments, remote work, side hustles), real economic context, and your unique angle. Be specific. 2-3 paragraphs.`
-        :`Give a sharp REBUTTAL. Disagree with at least one specific point. Strengthen your recommendations for ${country}. 2 paragraphs max.`;
-      try{
-        const reply=await callClaude(`${agent.personality}\n\nDebate: Best ways to make money in ${country}.\n${langI}\n${instruction}${context}`,[{role:'user',content:`[${round.round}] Your turn for ${country}.`}]);
-        setChipStatus(agent.key,'DONE');
-        addMessage(agent.key,reply);
-        convHistory.push({agent:agent.label,text:reply});
-        await new Promise(r=>setTimeout(r,600));
-      }catch(e){setChipStatus(agent.key,'ERR');removeTyping();console.error(e)}
+
+// ── DEBATE ───────────────────────────────────────────────────
+async function startDebate() {
+  const country = document.getElementById('country').value.trim();
+  const question = document.getElementById('question').value.trim();
+  if (!country || !question || !sel.cap || !sel.exp || !sel.risk) {
+    alert(lang === 'es' ? 'Por favor completa todos los campos' : 'Please fill in all fields');
+    return;
+  }
+  document.getElementById('form-step').style.display = 'none';
+  document.getElementById('debate-step').style.display = 'block';
+  document.getElementById('debate-cards').innerHTML = '';
+  document.getElementById('conclusion-block').style.display = 'none';
+  await runDebate(country, question);
+}
+
+async function runDebate(country, question) {
+  const profile = lang === 'es'
+    ? `País: ${country} | Capital: ${sel.cap} | Experiencia: ${sel.exp} | Riesgo: ${sel.risk}`
+    : `Country: ${country} | Capital: ${sel.cap} | Experience: ${sel.exp} | Risk: ${sel.risk}`;
+
+  const history = [];
+  const statusEl = document.getElementById('debate-status-text');
+  const progressEl = document.getElementById('progress');
+
+  // Save to Supabase
+  try {
+    if (sb) await sb.from('debates').insert({ country, question, capital: sel.cap, experience: sel.exp, risk: sel.risk, user_id: currentUser?.id || null });
+  } catch (e) { /* silent fail */ }
+
+  for (let i = 0; i < AIs.length; i++) {
+    const ai = AIs[i];
+    const pct = Math.round(((i) / AIs.length) * 80);
+    progressEl.style.width = pct + '%';
+    statusEl.textContent = lang === 'es' ? `Analizando: ${ai.name} (${i + 1}/5)...` : `Analyzing: ${ai.name} (${i + 1}/5)...`;
+
+    const cardEl = document.createElement('div');
+    cardEl.className = 'ai-debate-card active fade-in';
+    cardEl.id = 'card-' + ai.id;
+    cardEl.innerHTML = `
+      <div class="ai-debate-head">
+        <div class="ai-avatar" style="background:${ai.bg};color:${ai.color}">${ai.name.substring(0,2).toUpperCase()}</div>
+        <div><div class="ai-info-name" style="color:${ai.color}">${ai.name}</div><div class="ai-info-role">${ai.role[lang]}</div></div>
+      </div>
+      <div class="ai-debate-text" id="txt-${ai.id}">
+        <div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+      </div>`;
+    document.getElementById('debate-cards').appendChild(cardEl);
+    cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const prevCtx = history.length > 0
+      ? (lang === 'es' ? `\n\nLo que dijeron antes:\n${history.map(d => `${d.name}: ${d.text}`).join('\n')}` : `\n\nPrevious analysts said:\n${history.map(d => `${d.name}: ${d.text}`).join('\n')}`)
+      : '';
+
+    const userMsg = `${lang === 'es' ? 'Perfil' : 'Profile'}: ${profile}\n${lang === 'es' ? 'Pregunta' : 'Question'}: ${question}${prevCtx}\n\n${lang === 'es' ? 'Da tu análisis.' : 'Give your analysis.'}`;
+
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 300, system: ai.prompt[lang], messages: [{ role: 'user', content: userMsg }] })
+      });
+      const data = await resp.json();
+      const txt = data.content?.[0]?.text || (lang === 'es' ? 'No disponible.' : 'Not available.');
+      history.push({ name: ai.name, text: txt });
+      document.getElementById('txt-' + ai.id).textContent = txt;
+      cardEl.classList.remove('active');
+    } catch (e) {
+      document.getElementById('txt-' + ai.id).textContent = lang === 'es' ? 'Error de conexión.' : 'Connection error.';
     }
   }
-  updateStatus('Generando conclusión final...',true);setAllIdle();
-  try{
-    const fullDebate=convHistory.map(m=>`[${m.agent}]: ${m.text}`).join('\n\n');
-    const conclusion=await callClaude(
-      `You are a panel moderator synthesizing a debate about making money in ${country}.\n${langI}\nProvide:\n1. TOP 3 best opportunities with most consensus (specific)\n2. One underrated opportunity mentioned\n3. Single best recommendation for ${country}'s economy\n\nBe concrete and actionable.`,
-      [{role:'user',content:`Full debate:\n\n${fullDebate}\n\nSynthesize now.`}]
-    );
-    document.getElementById('conclusionText').textContent=conclusion;
-    document.getElementById('conclusionBox').classList.add('visible');
-    document.getElementById('userInputArea').style.display='flex';
-    updateStatus(`Debate completado — ${convHistory.length} intervenciones`,false);
-    await sb.from('debates').insert({country,lang,messages:JSON.stringify(convHistory),conclusion,created_at:new Date().toISOString()});
-    loadHistory();
-  }catch(e){updateStatus('Error al generar conclusión',false);console.error(e)}
-  isDebating=false;
+
+  progressEl.style.width = '90%';
+  statusEl.textContent = lang === 'es' ? 'Generando conclusión del panel...' : 'Generating panel conclusion...';
+  await generateConclusion(history, profile, question, country);
 }
-async function sendUserQuestion(){
-  const q=document.getElementById('userQuestion').value.trim();
-  if(!q||isDebating)return;
-  document.getElementById('userQuestion').value='';
-  document.getElementById('sendBtn').disabled=true;
-  addMessage(null,q,true);
-  isDebating=true;
-  updateStatus('Panel respondiendo...',true);
-  const langI=`CRITICAL: Respond ONLY in ${lang}.`;
-  for(const agent of AGENTS){
-    setChipStatus(agent.key,'LIVE');
-    showTyping(agent.key);
-    try{
-      const reply=await callClaude(`${agent.personality}\n\nContext: debate about making money in ${country}.\n${langI}\nAnswer this question: "${q}"\n1-2 paragraphs max.`,[{role:'user',content:q}]);
-      setChipStatus(agent.key,'DONE');
-      addMessage(agent.key,reply);
-      await new Promise(r=>setTimeout(r,400));
-    }catch(e){setChipStatus(agent.key,'ERR');removeTyping()}
-  }
-  setAllIdle();isDebating=false;
-  updateStatus('Listo para más preguntas',false);
-  document.getElementById('sendBtn').disabled=false;
-}
-async function loadHistory(){
-  try{
-    const{data}=await sb.from('debates').select('*').order('created_at',{ascending:false}).limit(6);
-    if(!data||data.length===0)return;
-    document.getElementById('historySection').style.display='block';
-    const grid=document.getElementById('historyGrid');
-    grid.innerHTML='';
-    data.forEach(d=>{
-      const div=document.createElement('div');
-      div.className='history-card';
-      const date=new Date(d.created_at).toLocaleDateString('es',{day:'numeric',month:'short',year:'numeric'});
-      div.innerHTML=`<div class="hc-country">${d.country}</div><div class="hc-date">${date} · ${d.lang}</div><div class="hc-preview">${d.conclusion?d.conclusion.slice(0,120)+'...':''}</div>`;
-      grid.appendChild(div);
+
+async function generateConclusion(history, profile, question, country) {
+  const summary = history.map(d => `${d.name}: ${d.text}`).join('\n\n');
+  const sys = lang === 'es'
+    ? `Eres un moderador que sintetiza el debate de 5 analistas IA sobre oportunidades de negocio. Da una conclusión con los top 3 negocios recomendados. Responde SOLO JSON sin markdown:\n{"top":[{"rank":1,"name":"Negocio","why":"Por qué es #1 en 1-2 oraciones","score":90},{"rank":2,"name":"Negocio","why":"Razón","score":75},{"rank":3,"name":"Negocio","why":"Razón","score":60}],"summary":"Una frase de conclusión del panel"}`
+    : `You are a moderator synthesizing a debate of 5 AI analysts on business opportunities. Give a conclusion with top 3 recommended businesses. Respond ONLY JSON no markdown:\n{"top":[{"rank":1,"name":"Business","why":"Why #1 in 1-2 sentences","score":90},{"rank":2,"name":"Business","why":"Reason","score":75},{"rank":3,"name":"Business","why":"Reason","score":60}],"summary":"One panel conclusion sentence"}`;
+
+  const userMsg = `${lang === 'es' ? 'Perfil' : 'Profile'}: ${profile}\n${lang === 'es' ? 'Pregunta' : 'Question'}: ${question}\n\n${lang === 'es' ? 'Debate' : 'Debate'}:\n${summary}`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 500, system: sys, messages: [{ role: 'user', content: userMsg }] })
     });
-  }catch(e){console.error(e)}
+    const data = await resp.json();
+    let txt = data.content?.[0]?.text || '{}';
+    txt = txt.replace(/```json|```/g, '').trim();
+    const res = JSON.parse(txt);
+    renderConclusion(res);
+    document.getElementById('progress').style.width = '100%';
+    document.getElementById('debate-status-text').textContent = lang === 'es' ? 'Debate completado.' : 'Debate complete.';
+
+    // Save top result
+    try {
+      if (sb) if (res.top?.[0]) await sb.from('results').insert({ country, question, top_business: res.top[0].name });
+    } catch (e) { /* silent */ }
+  } catch (e) {
+    document.getElementById('debate-status-text').textContent = lang === 'es' ? 'Error al generar conclusión.' : 'Error generating conclusion.';
+  }
 }
-function goBack(){
-  document.getElementById('heroPage').style.display='flex';
-  document.getElementById('debatePage').classList.remove('active');
+
+function renderConclusion(res) {
+  const inner = document.getElementById('conclusion-inner');
+  let html = `<div class="conclusion-summary">${res.summary || ''}</div>`;
+  (res.top || []).forEach((item, i) => {
+    html += `<div class="rank-row">
+      <div class="rank-number ${i === 0 ? 'top' : ''}">#${item.rank}</div>
+      <div class="rank-body">
+        <div class="rank-name">${item.name}</div>
+        <div class="rank-why">${item.why}</div>
+        <div class="score-track"><div class="score-bar" style="width:${item.score || 60}%"></div></div>
+      </div>
+    </div>`;
+  });
+  inner.innerHTML = html;
+  document.getElementById('conclusion-block').style.display = 'block';
+  document.getElementById('conclusion-block').scrollIntoView({ behavior: 'smooth' });
 }
-document.getElementById('countryInput').addEventListener('keydown',e=>{if(e.key==='Enter')startDebate()});
-document.getElementById('userQuestion').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendUserQuestion();}});
-loadHistory();
+
+function resetForm() {
+  document.getElementById('debate-step').style.display = 'none';
+  document.getElementById('form-step').style.display = 'block';
+  document.getElementById('debate-cards').innerHTML = '';
+  document.getElementById('progress').style.width = '0%';
+  sel = { cap: null, exp: null, risk: null };
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  document.getElementById('country').value = '';
+  document.getElementById('question').value = '';
+}
+
+// ── STATS ────────────────────────────────────────────────────
+async function loadStats() {
+  if (!sb) { document.getElementById('top-countries-list').innerHTML='<div style="color:var(--muted);font-size:13px">Configura Supabase para ver estadísticas</div>'; document.getElementById('top-topics-list').innerHTML='<div style="color:var(--muted);font-size:13px">—</div>'; return; }
+  try {
+    const { data: debates } = await sb.from('debates').select('country').order('created_at', { ascending: false }).limit(200);
+    const { data: results } = await sb.from('results').select('top_business').limit(200);
+    const { count } = await sb.from('debates').select('*', { count: 'exact', head: true });
+
+    document.getElementById('stat-debates').textContent = count || 0;
+
+    if (debates) {
+      const countryCounts = {};
+      debates.forEach(d => { countryCounts[d.country] = (countryCounts[d.country] || 0) + 1; });
+      const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      document.getElementById('stat-countries').textContent = Object.keys(countryCounts).length;
+      document.getElementById('top-countries-list').innerHTML = sorted.map(([c, n]) =>
+        `<div class="stat-row"><span class="stat-row-label">${c}</span><span class="stat-row-val">${n}</span></div>`).join('');
+    }
+    if (results) {
+      const topics = {};
+      results.forEach(r => { if (r.top_business) topics[r.top_business] = (topics[r.top_business] || 0) + 1; });
+      const sorted2 = Object.entries(topics).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      document.getElementById('top-topics-list').innerHTML = sorted2.map(([t, n]) =>
+        `<div class="stat-row"><span class="stat-row-label">${t}</span><span class="stat-row-val">${n}</span></div>`).join('');
+    }
+  } catch (e) {
+    document.getElementById('top-countries-list').innerHTML = '<div style="color:var(--muted);font-size:13px">Sin datos aún</div>';
+    document.getElementById('top-topics-list').innerHTML = '<div style="color:var(--muted);font-size:13px">Sin datos aún</div>';
+  }
+}
+
+async function loadHeroStats() {
+  if (!sb) return;
+  try {
+    const { count: dc } = await sb.from('debates').select('*', { count: 'exact', head: true });
+    document.getElementById('stat-debates').textContent = dc || 0;
+    const { data } = await sb.from('debates').select('country').limit(500);
+    if (data) {
+      const unique = new Set(data.map(d => d.country));
+      document.getElementById('stat-countries').textContent = unique.size;
+    }
+    const { count: uc } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+    document.getElementById('stat-users').textContent = uc || 0;
+  } catch (e) {}
+}
+
+// ── AUTH ─────────────────────────────────────────────────────
+function openModal(type) {
+  document.getElementById('modal-login').style.display = type === 'login' ? 'block' : 'none';
+  document.getElementById('modal-register').style.display = type === 'register' ? 'block' : 'none';
+  document.getElementById('auth-modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('auth-modal').classList.remove('open');
+}
+document.getElementById('auth-modal').addEventListener('click', e => { if (e.target.id === 'auth-modal') closeModal(); });
+
+async function doLogin() {
+  if (!sb) { alert(lang === 'es' ? 'Configura Supabase para usar login' : 'Configure Supabase to use login'); return; }
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { errEl.textContent = lang === 'es' ? 'Email o contraseña incorrectos' : 'Invalid email or password'; return; }
+  currentUser = data.user;
+  updateAuthUI();
+  closeModal();
+}
+
+async function doRegister() {
+  if (!sb) { alert(lang === 'es' ? 'Configura Supabase para usar registro' : 'Configure Supabase to use sign up'); return; }
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-error');
+  if (pass.length < 6) { errEl.textContent = lang === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'; return; }
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if (error) { errEl.textContent = error.message; return; }
+  currentUser = data.user;
+  updateAuthUI();
+  closeModal();
+}
+
+async function signOut() {
+  if (sb) await sb.auth.signOut();
+  currentUser = null;
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const loggedIn = !!currentUser;
+  document.getElementById('auth-area').style.display = loggedIn ? 'none' : 'flex';
+  document.getElementById('user-area').style.display = loggedIn ? 'block' : 'none';
+  if (currentUser) document.getElementById('user-email-display').textContent = currentUser.email;
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+if (sb) {
+  sb.auth.getSession().then(({ data }) => {
+    if (data.session) { currentUser = data.session.user; updateAuthUI(); }
+  });
+  sb.auth.onAuthStateChange((_, session) => {
+    currentUser = session?.user || null;
+    updateAuthUI();
+  });
+}
+loadHeroStats();
 </script>
 </body>
 </html>
